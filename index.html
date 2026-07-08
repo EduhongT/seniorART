@@ -154,6 +154,10 @@ const AREA_STYLE = {
 
 let DATA = { brand:{ko:"머리에 그리는 AI 스쿨",en:"Meori Art"}, assetBase:"", areas:[] };
 let MEMBER = null;
+let AUTO_TRIED = false;
+function 코드저장(c){try{localStorage.setItem("meori_code",c);}catch(e){}}
+function 코드삭제(){try{localStorage.removeItem("meori_code");}catch(e){}}
+function logout(){코드삭제(); AUTO_TRIED=true; MEMBER=null; gateScreen();}
 
 function gateScreen(msg){
   setBrand(true);
@@ -162,23 +166,27 @@ function gateScreen(msg){
       <div style="width:74px;height:74px;border-radius:22px;background:#C8453B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 18px">🎨</div>
       <h2 style="font-size:23px;font-weight:800;margin:0 0 6px">어서 오세요</h2>
       <p style="color:var(--muted);font-size:15px;margin:0 0 24px">선생님께 받은 회원코드를 입력해 주세요</p>
-      <input id="gcode" inputmode="numeric" maxlength="4" placeholder="○○○○" autocomplete="off"
-        style="width:100%;box-sizing:border-box;border:2px solid #E9E1D2;border-radius:16px;background:#fff;font-size:26px;font-weight:800;letter-spacing:.35em;text-align:center;padding:14px 8px;margin-bottom:14px">
+      <input id="gcode" inputmode="numeric" maxlength="7" placeholder="○○○○○○○" autocomplete="off"
+        style="width:100%;box-sizing:border-box;border:2px solid #E9E1D2;border-radius:16px;background:#fff;font-size:26px;font-weight:800;letter-spacing:.14em;text-align:center;padding:14px 8px;margin-bottom:14px">
       <button id="ggo" style="width:100%;min-height:60px;border:0;border-radius:16px;background:#C8453B;color:#fff;font-size:19px;font-weight:800;cursor:pointer;font-family:inherit">수업 시작하기</button>
       <div id="gmsg" style="min-height:26px;font-size:15px;font-weight:700;color:#C8453B;margin-top:12px">${msg||""}</div>
     </div>`;
   const input=document.getElementById('gcode'), btn=document.getElementById('ggo'), gm=document.getElementById('gmsg');
   btn.onclick=go; input.addEventListener('keydown',ev=>{if(ev.key==='Enter')go();}); input.focus();
+  try{
+    const saved = localStorage.getItem("meori_code");
+    if(saved && !AUTO_TRIED){ AUTO_TRIED=true; input.value=saved; gm.textContent="저장된 코드로 들어가는 중…"; go(); }
+  }catch(e){}
   async function go(){
     const code=input.value.trim();
-    if(code.length<4){gm.textContent="코드 네 자리를 입력해 주세요.";return;}
+    if(code.length<7){gm.textContent="코드 일곱 자리를 입력해 주세요.";return;}
     if(API_URL.indexOf("http")!==0){gm.textContent="설정 필요: 파일 안의 API_URL에 웹 앱 주소를 넣어주세요.";return;}
     btn.disabled=true; gm.textContent="확인하는 중…";
     try{
       const res=await fetch(API_URL+"?code="+encodeURIComponent(code));
       const r=await res.json();
-      if(!r.ok){btn.disabled=false;gm.textContent=r.error||"확인에 실패했습니다.";return;}
-      MEMBER=r;
+      if(!r.ok){btn.disabled=false;gm.textContent=r.error||"확인에 실패했습니다.";if(r.error&&r.error.indexOf("등록되지")>=0)코드삭제(); return;}
+      MEMBER=r; 코드저장(code);
       DATA.areas=(r.areas||[]).filter(a=>a.open>0).map(a=>{
         const st=AREA_STYLE[a.key]||{sub:"",initial:a.name[0],color:"#6B7CB6",stages:["감상","순서","따라하기","한국어","AI"]};
         return {key:a.key,name:a.name,sub:st.sub,initial:st.initial,color:st.color,stages:st.stages,
@@ -199,7 +207,7 @@ function setBrand(h){brand.innerHTML = h
 
 function home(){
   setBrand(true);
-  let h='<h2 class="greet">'+(MEMBER?MEMBER.name+' 님, 반갑습니다 🌸':'어서 오세요')+'</h2><p class="lead">'+(MEMBER?MEMBER.months+'개월차 · 시작일 '+MEMBER.startDate+' · 열린 수업을 눌러 시작하세요':'')+'</p>'
+  let h='<h2 class="greet">'+(MEMBER?MEMBER.name+' 님, 반갑습니다 🌸':'어서 오세요')+'</h2><p class="lead">'+(MEMBER?MEMBER.months+'개월차 · 시작일 '+MEMBER.startDate+' · 열린 수업을 눌러 시작하세요 &nbsp;<a onclick="logout()" style="font-size:12px;color:#B9AE9D;text-decoration:underline;cursor:pointer">코드 변경</a>':'')+'</p>'
    ;
   DATA.areas.forEach((a,i)=>{const d=a.lessons.filter(l=>progress[l.id]).length;
     h+='<button class="area" onclick="program('+i+')"><span class="chip" style="background:'+a.color+'">'+a.initial+'</span>'
