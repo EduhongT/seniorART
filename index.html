@@ -377,7 +377,31 @@ function mountCanvas(guide){
 }
 
 let SV={steps:[],cur:1,timer:null};
-function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';u.rate=.85;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+// ── 음성 재생 (모바일 보강판) ──
+let VOICE_KO=null, KAKAO_HINTED=false;
+function pickKoVoice(){try{const vs=speechSynthesis.getVoices();VOICE_KO=vs.find(v=>v.lang&&v.lang.toLowerCase().indexOf('ko')===0)||null;}catch(e){}}
+try{pickKoVoice(); if('speechSynthesis' in window) speechSynthesis.onvoiceschanged=pickKoVoice;}catch(e){}
+function toast(msg){
+  let t=document.getElementById('meoritoast');
+  if(!t){t=document.createElement('div');t.id='meoritoast';
+    t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:88%;background:#2A2622;color:#fff;font-size:14.5px;line-height:1.5;padding:12px 16px;border-radius:14px;z-index:99;box-shadow:0 4px 14px rgba(0,0,0,.25)';
+    document.body.appendChild(t);}
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(t._tm);t._tm=setTimeout(()=>{t.style.display='none';},6000);}
+function speak(t){
+  try{
+    if(!('speechSynthesis' in window)){toast('이 화면에서는 소리 재생이 지원되지 않아요.');return;}
+    if(/KAKAOTALK/i.test(navigator.userAgent)&&!KAKAO_HINTED){KAKAO_HINTED=true;
+      toast('소리가 안 들리면: 오른쪽 아래 ⋮ 버튼 → "다른 브라우저로 열기"를 눌러주세요.');}
+    speechSynthesis.cancel();
+    setTimeout(function(){
+      const u=new SpeechSynthesisUtterance(t);
+      u.lang='ko-KR';u.rate=.85;
+      if(VOICE_KO)u.voice=VOICE_KO;
+      speechSynthesis.speak(u);
+      try{speechSynthesis.resume();}catch(e){}
+    },80);
+  }catch(e){}}
 function aiToggle(i){const ex=document.getElementById('aiex'+i),ch=document.getElementById('aichev'+i);if(!ex)return;const open=ex.classList.toggle('on');if(ch)ch.textContent=open?'▴':'▾';}
 function svInit(steps){SV.steps=steps;SV.cur=1;svShow();}
 function svShow(){
