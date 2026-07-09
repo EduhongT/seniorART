@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#FBF7EF">
-<title>머리에 그리는 AI 스쿨 — 1개월차 패키지</title>
+<title>머리에 그리는 AI 스쿨</title>
 <style>
   :root{--paper:#FBF7EF;--card:#FFF;--ink:#2A2622;--muted:#8A8073;--line:#E9E1D2;
         --cinnabar:#C8453B;--celadon:#5E8C7B;--night:#10162b;--tap:60px;}
@@ -207,7 +207,8 @@ function setBrand(h){brand.innerHTML = h
 
 function home(){
   setBrand(true);
-  let h='<h2 class="greet">'+(MEMBER?MEMBER.name+' 님, 반갑습니다 🌸':'어서 오세요')+'</h2><p class="lead">'+(MEMBER?MEMBER.months+'개월차 · 시작일 '+MEMBER.startDate+' · 열린 수업을 눌러 시작하세요 &nbsp;<a onclick="logout()" style="font-size:12px;color:#B9AE9D;text-decoration:underline;cursor:pointer">코드 변경</a>':'')+'</p>'
+  let h='<div style="display:flex;justify-content:flex-end;margin-bottom:4px"><button onclick="logout()" style="font-size:14px;padding:8px 14px;border:1.5px solid #E9E1D2;border-radius:12px;background:#fff;color:#8A8073;cursor:pointer">🔑 코드 변경</button></div>'
+  + '<h2 class="greet">'+(MEMBER?MEMBER.name+' 님, 반갑습니다 🌸':'어서 오세요')+'</h2><p class="lead">'+(MEMBER?MEMBER.months+'개월차 · 시작일 '+MEMBER.startDate+' · 열린 수업을 눌러 시작하세요':'')+'</p>'
    ;
   DATA.areas.forEach((a,i)=>{const d=a.lessons.filter(l=>progress[l.id]).length;
     h+='<button class="area" onclick="program('+i+')"><span class="chip" style="background:'+a.color+'">'+a.initial+'</span>'
